@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Mode"
+  short_description: "Element screenshot feedback with ZIP export"
+  default_prompt: "Use Review Mode to capture element-level UI feedback with html2canvas, export a JSZip report package (REPORT.md + screenshots/), and optionally sync reports to Notion through a server-side API bridge (no client-side secrets)."
