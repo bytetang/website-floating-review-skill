@@ -1,11 +1,21 @@
 ---
 name: review-mode
-description: Add or upgrade a UI Review Mode workflow that captures element-specific screenshots and reviewer comments, then exports a ZIP package with REPORT.md and images. Use when users ask for click-to-comment review tooling, DOM element feedback capture, html2canvas integration, JSZip report export, or AI-assisted UI review artifact generation.
+description: Add or upgrade a UI Review Mode workflow that captures element-specific screenshots and reviewer comments, then exports a ZIP package with REPORT.md and images. Use when users ask for click-to-comment review tooling, DOM element feedback capture, html2canvas integration, JSZip report export, AI-assisted UI review artifact generation, or cross-agent review-mode implementation guidance for Claude Code, Codex, or OpenClaw.
 ---
 
 # Review Mode
 
 Implement or update client-side review tooling so reviewers can click an element, add a comment, capture only that element as an image, and export a portable ZIP report.
+
+## Agent Compatibility
+
+This skill is written to be portable across Claude Code, Codex, and OpenClaw-style coding agents.
+
+- Keep the implementation guidance framework-agnostic and browser-runtime-specific.
+- Prefer patching existing project files when the host supports file editing.
+- If the host cannot access bundled skill assets directly, inline the needed code from the referenced scripts instead of assuming asset injection.
+- If the host supports agent-specific manifests, treat this `SKILL.md` as the source of truth and keep any platform manifest limited to discovery metadata.
+- Do not rely on agent-specific tools, secret storage conventions, or UI affordances unless the user explicitly asks for a host-specific integration.
 
 ## Workflow
 
@@ -66,12 +76,15 @@ Return or patch JavaScript containing:
 - optional Notion sync helper (`pushFeedbackToNotion`) that calls backend API only
 
 Keep functions framework-agnostic unless user asks for React/Vue wrappers.
+When the host cannot patch files directly, return a complete drop-in JavaScript snippet plus any required integration notes.
 
 ## Script
 
 If reusable code is needed, use:
 - `scripts/review_mode_capture_export.js`
 - `scripts/review_mode_notion_sync_server_template.mjs`
+
+If the current agent runtime does not expose bundled skill files automatically, read these files manually and adapt their contents into the target project.
 
 ## Security Notes
 
