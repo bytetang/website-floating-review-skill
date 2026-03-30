@@ -8,6 +8,7 @@ export const feedbackLog = [];
 let reviewModeEnabled = false;
 let reviewIsCapturing = false;
 let lockUnderlyingInteractions = true;
+let simpleFeedbackMode = false;
 let toolbarSelector = '.review-toolbar';
 let toolbarHandleSelector = '.review-toolbar-meta';
 let toolbarPosition = null;
@@ -317,22 +318,33 @@ export async function onReviewClick(event) {
     const stamp = ts.toISOString().replace(/[:.]/g, '-');
     const screenshotFile = `${stamp}-${safeName(target.tagName)}.png`;
 
-    feedbackLog.push({
-      id: feedbackLog.length + 1,
-      createdAt: ts.toISOString(),
-      comment,
-      element: {
-        tag: target.tagName.toLowerCase(),
-        id: target.id || null,
-        className: target.className || null,
-        selector: cssPath(target),
-        text: (target.textContent || '').trim().slice(0, 160),
-      },
-      screenshot: {
-        file: screenshotFile,
-        dataUrl: imageDataUrl,
-      },
-    });
+    if (simpleFeedbackMode) {
+      feedbackLog.push({
+        timestamp: ts.toISOString(),
+        comment,
+        screenshot: {
+          file: screenshotFile,
+          dataUrl: imageDataUrl,
+        },
+      });
+    } else {
+      feedbackLog.push({
+        id: feedbackLog.length + 1,
+        createdAt: ts.toISOString(),
+        comment,
+        element: {
+          tag: target.tagName.toLowerCase(),
+          id: target.id || null,
+          className: target.className || null,
+          selector: cssPath(target),
+          text: (target.textContent || '').trim().slice(0, 160),
+        },
+        screenshot: {
+          file: screenshotFile,
+          dataUrl: imageDataUrl,
+        },
+      });
+    }
   } catch (error) {
     console.error('Review mode capture failed', error);
     window.alert('Could not capture screenshot for this element.');
@@ -410,6 +422,9 @@ export function configureReviewMode(options = {}) {
   if (typeof options.lockUnderlyingInteractions === 'boolean') {
     lockUnderlyingInteractions = options.lockUnderlyingInteractions;
   }
+  if (typeof options.simpleFeedbackMode === 'boolean') {
+    simpleFeedbackMode = options.simpleFeedbackMode;
+  }
   if (typeof options.toolbarSelector === 'string' && options.toolbarSelector.trim()) {
     toolbarSelector = options.toolbarSelector.trim();
   }
@@ -472,7 +487,7 @@ export async function exportFeedbackZip(customLog = feedbackLog) {
         }
       }
 
-      report.push(`## ${i + 1}. ${mdEscape(item?.element?.tag || 'element')} — ${item?.createdAt || 'Unknown time'}`);
+      report.push(`## ${i + 1}. ${mdEscape(item?.element?.tag || 'element')} — ${item?.createdAt || item?.timestamp || 'Unknown time'}`);
       report.push('');
       report.push(`- **Comment:** ${mdEscape(item?.comment || '(none)')}`);
       report.push(`- **Selector:** \`${item?.element?.selector || 'N/A'}\``);
@@ -514,7 +529,7 @@ export async function pushFeedbackToNotion(
       sourceUrl,
       items: customLog.map((item) => ({
         id: item?.id,
-        createdAt: item?.createdAt,
+        createdAt: item?.createdAt || item?.timestamp,
         comment: item?.comment,
         element: item?.element,
         screenshot: item?.screenshot,
